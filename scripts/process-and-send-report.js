@@ -33,7 +33,6 @@ if (rawResults.testResults) {
   });
 }
 
-// Build required JSON schema
 const report = {
   repositoryName: process.env.GITHUB_REPOSITORY || "local/repo",
   branch: process.env.GITHUB_REF_NAME || "main",
@@ -58,7 +57,6 @@ const report = {
 
 console.log("Generated Report Payload:", JSON.stringify(report, null, 2));
 
-// 1. Send report to Local HTTP Receiver
 const receiverUrl = process.env.RECEIVER_URL;
 if (receiverUrl) {
   try {
@@ -75,6 +73,8 @@ if (receiverUrl) {
         headers: {
           "Content-Type": "application/json",
           "Content-Length": Buffer.byteLength(postData),
+          "bypass-tunnel-reminder": "true",
+          "User-Agent": "CustomRunner",
         },
       },
       (res) => {
@@ -94,7 +94,6 @@ if (receiverUrl) {
   console.log("RECEIVER_URL secret missing; skipping HTTP report dispatch.");
 }
 
-// 2. Bonus Task 2: Email Report Dispatch
 async function sendEmailReport() {
   const { EMAIL_USER, EMAIL_PASS, EMAIL_TO } = process.env;
   if (!EMAIL_USER || !EMAIL_PASS || !EMAIL_TO) {
@@ -122,7 +121,7 @@ Overall Result: ${report.testSummary.overallStatus}
 Total: ${report.testSummary.total} | Passed: ${report.testSummary.passed} | Failed: ${report.testSummary.failed}
 
 Individual Test Results:
-${report.tests.map((t) => `- ${t.name}: ${t.result.toUpperCase()}${t.failureMessage ? "\n  Error: " + t.failureMessage : ""}`).join("\n")}
+${report.tests.map((t) => `- ${t.name}: ${t.result.toUpperCase()}${t.failureMessage ? "\n Error: " + t.failureMessage : ""}`).join("\n")}
 `,
     attachments: [
       {
