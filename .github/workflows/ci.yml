@@ -1,0 +1,70 @@
+name: CI Assignment Portal
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  test-and-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Execute Automated Test Suite
+        id: run_tests
+        continue-on-error: true
+        run: npm test
+
+      - name: Generate and Dispatch Test Report
+        if: always()
+        env:
+          RECEIVER_URL: ${{ secrets.RECEIVER_URL }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        run: node scripts/process-and-send-report.js
+
+      - name: Fail Pipeline on Test Failure
+        if: steps.run_tests.outcome != 'success'
+        run: |
+          echo "Automated tests failed."
+          exit 1
+
+  deploy-pages:
+    name: "Bonus Task: Conditional Deploy to GitHub Pages"
+    needs: test-and-report
+    if: github.ref == 'refs/heads/main' && success()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Static Frontend Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './public'
+
+      - name: Deploy Artifact to Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
