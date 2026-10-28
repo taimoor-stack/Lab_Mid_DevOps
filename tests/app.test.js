@@ -12,7 +12,7 @@ describe("Assignment Submission Portal API", () => {
     });
 
     // INTENTIONAL FAILURE FOR VERIFICATION: Expected 201, changed to 500
-    expect(response.statusCode).toBe(500);
+    expect(response.statusCode).toBe(201);
     expect(response.body.submission).toBeDefined();
     expect(response.body.submission.regNo).toBe("SP21-BCS-001");
 
