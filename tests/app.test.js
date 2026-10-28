@@ -2,7 +2,7 @@ const request = require("supertest");
 const app = require("../app");
 
 describe("Assignment Submission Portal API", () => {
-  // Test Case 1: Complete details and valid submission URL
+  // Test Case 1: Complete details and valid submission URL (MODIFIED TO FAIL)
   test("Complete details and a valid submission URL", async () => {
     const response = await request(app).post("/api/submissions").send({
       name: "John Doe",
@@ -11,7 +11,8 @@ describe("Assignment Submission Portal API", () => {
       url: "https://github.com/johndoe/devops-lab",
     });
 
-    expect(response.statusCode).toBe(201);
+    // INTENTIONAL FAILURE FOR VERIFICATION: Expected 201, changed to 500
+    expect(response.statusCode).toBe(500);
     expect(response.body.submission).toBeDefined();
     expect(response.body.submission.regNo).toBe("SP21-BCS-001");
 
