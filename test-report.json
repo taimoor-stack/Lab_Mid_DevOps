@@ -1,0 +1,30 @@
+{
+  "repositoryName": "taimoor-stack/Lab_Mid_DevOps",
+  "branch": "main",
+  "commitSHA": "b87b31707ea11f0d587f89b3007816b03b334ee9",
+  "pipelineRunIdentifier": "40680127207",
+  "executionTimestamp": "2026-10-28T11:27:54.583Z",
+  "testSummary": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0,
+    "overallStatus": "PASSED"
+  },
+  "tests": [
+    {
+      "name": "Complete details and a valid submission URL",
+      "result": "passed",
+      "failureMessage": null
+    },
+    {
+      "name": "Missing registration number",
+      "result": "passed",
+      "failureMessage": null
+    },
+    {
+      "name": "Invalid submission URL",
+      "result": "passed",
+      "failureMessage": null
+    }
+  ]
+}
