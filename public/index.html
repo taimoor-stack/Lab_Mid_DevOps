@@ -1,91 +1,67 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Assignment Submission Portal</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 650px; margin: 40px auto; padding: 20px; line-height: 1.6; }
-    .form-group { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 5px; font-weight: bold; }
-    input { width: 100%; padding: 8px; box-sizing: border-box; }
-    button { padding: 10px 15px; background: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
-    .message { margin-top: 15px; padding: 10px; display: none; border-radius: 4px; }
-    .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-    .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-    ul { list-style: none; padding: 0; }
-    li { background: #f8f9fa; margin: 5px 0; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-  </style>
-</head>
-<body>
-  <h2>Assignment Submission Portal</h2>
-  <div id="message" class="message"></div>
-  <form id="submissionForm">
-    <div class="form-group">
-      <label for="name">Student Name</label>
-      <input type="text" id="name" required>
-    </div>
-    <div class="form-group">
-      <label for="regNo">Registration Number</label>
-      <input type="text" id="regNo" required>
-    </div>
-    <div class="form-group">
-      <label for="title">Assignment Title</label>
-      <input type="text" id="title" required>
-    </div>
-    <div class="form-group">
-      <label for="url">Submission URL</label>
-      <input type="url" id="url" required>
-    </div>
-    <button type="submit">Submit Assignment</button>
-  </form>
+const form = document.getElementById("submissionForm");
+const list = document.getElementById("submissionList");
 
-  <h3>Saved Submissions</h3>
-  <ul id="submissionsList"></ul>
+// Function to render submissions on UI
+function renderSubmissions(submissions) {
+  list.innerHTML = "";
+  submissions.forEach((item) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<strong>${item.name}</strong> (${item.regNo}) - <em>${item.title}</em>: <a href="${item.url}" target="_blank">${item.url}</a>`;
+    list.appendChild(li);
+  });
+}
 
-  <script>
-    const form = document.getElementById('submissionForm');
-    const messageDiv = document.getElementById('message');
-    const list = document.getElementById('submissionsList');
-
-    async function fetchSubmissions() {
-      try {
-        const res = await fetch('/api/submissions');
-        if (res.ok) {
-          const data = await res.json();
-          list.innerHTML = data.map(s => `<li><strong>${s.name}</strong> (${s.regNo}) - ${s.title}: <a href="${s.url}" target="_blank">${s.url}</a></li>`).join('');
-        }
-      } catch (e) { console.error(e); }
-    }
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const payload = {
-        name: document.getElementById('name').value,
-        regNo: document.getElementById('regNo').value,
-        title: document.getElementById('title').value,
-        url: document.getElementById('url').value
-      };
-
-      const res = await fetch('/api/submissions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
+// Load initial submissions (from server or localStorage)
+async function loadSubmissions() {
+  try {
+    const res = await fetch("/api/submissions");
+    if (res.ok) {
       const data = await res.json();
-      messageDiv.style.display = 'block';
-      if (res.ok) {
-        messageDiv.className = 'message success';
-        messageDiv.innerText = data.message;
-        form.reset();
-        fetchSubmissions();
-      } else {
-        messageDiv.className = 'message error';
-        messageDiv.innerText = data.error;
-      }
+      renderSubmissions(data);
+      return;
+    }
+  } catch (err) {
+    // Fallback to localStorage if static/GitHub Pages
+  }
+  const localData = JSON.parse(localStorage.getItem("submissions") || "[]");
+  renderSubmissions(localData);
+}
+
+// Handle form submission
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const payload = {
+    name: document.getElementById("name").value,
+    regNo: document.getElementById("regNo").value,
+    title: document.getElementById("title").value,
+    url: document.getElementById("url").value,
+  };
+
+  try {
+    const res = await fetch("/api/submissions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
 
-    fetchSubmissions();
-  </script>
-</body>
-</html>
+    if (res.ok) {
+      form.reset();
+      loadSubmissions();
+      return;
+    }
+  } catch (err) {
+    // Static environment / GitHub Pages fallback
+  }
+
+  // Client-side fallback for static GitHub Pages
+  const localData = JSON.parse(localStorage.getItem("submissions") || "[]");
+  localData.push(payload);
+  localStorage.setItem("submissions", JSON.stringify(localData));
+
+  form.reset();
+  renderSubmissions(localData);
+  alert("Submission saved locally!");
+});
+
+loadSubmissions();

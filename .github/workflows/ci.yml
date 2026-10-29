@@ -42,6 +42,29 @@ jobs:
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
         run: node scripts/process-and-send-report.js
 
+      - name: Send Test Report Email (Bonus Task)
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_USER }}
+          password: ${{ secrets.EMAIL_PASS }}
+          subject: "CI Test Report - ${{ github.repository }} [${{ github.sha }}]"
+          to: ${{ secrets.EMAIL_TO }}
+          from: "GitHub Actions CI <${{ secrets.EMAIL_USER }}>"
+          body: |
+            Automated CI Test Run Completed.
+
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Commit SHA: ${{ github.sha }}
+            Workflow Run ID: ${{ github.run_id }}
+
+            Please review the attached test-report.json file for complete test results.
+          attachments: test-report.json
+
       - name: Fail Pipeline on Test Failure
         if: steps.run_tests.outcome != 'success'
         run: |
